@@ -120,7 +120,7 @@ function createAuthBody(client) {
 }
 
 // power = 'on' or 'off'
-async function setFanPower(fan, power) {
+function setFanPower(fan, power) {
     return put('131airPurifier/v1/device/deviceStatus', {
         headers: createHeaders(client),
         json: {
@@ -132,12 +132,44 @@ async function setFanPower(fan, power) {
     });
 }
 
+// speed = 1, 2, 3
+function setFanSpeed(fan, speed) {
+    return put('131airPurifier/v1/device/updateSpeed', {
+        headers: createHeaders(client),
+        json: {
+            ...createBaseBody(),
+            ...createAuthBody(client),
+            'uuid': fan.uuid,
+            'level': speed
+        }
+    });
+}
+
+// mode = manual, auto, sleep
+function setFanMode(fan, mode) {
+    const body = {
+        ...createBaseBody(),
+        ...createAuthBody(client),
+        'uuid': fan.uuid,
+        'mode': mode
+    };
+    if (mode === 'manual') {
+        body['level'] = 1;
+    }
+    return put('131airPurifier/v1/device/updateMode', {
+        headers: createHeaders(client),
+        json: body
+    });
+}
+
 async function init() {
     await client.login(config.username, config.password);
     const { fans } = await client.getDevices();
     fans.forEach(async fan => {
-        const result = await setFanPower(fan, 'on');
-        console.log(result);
+        await setFanPower(fan, 'on');
+        await setFanSpeed(fan, 3);
+        await setFanMode(fan, 'sleep');
+        // console.log(result);
     });
 }
 
