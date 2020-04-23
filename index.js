@@ -2,6 +2,8 @@ const got = require('got');
 const crypto = require('crypto');
 const config = require('./config');
 
+const FanController = require('./fan/fanController');
+
 const request = got.extend({
     prefixUrl: 'https://smartapi.vesync.com',
     responseType: 'json'
@@ -25,6 +27,35 @@ class VesyncClient {
     constructor() {
         this.accountId = null;
         this.token = null;
+    }
+
+    post(url, options) {
+        return request.post(url, options);
+    }
+
+    put(url, body) {
+        const headers = this.createHeaders();
+        const options = {
+            headers,
+            json: {
+                ...createBaseBody(),
+                ...createAuthBody(this),
+                ...body
+            }
+        };
+        return request.put(url, options);
+    }
+
+    createHeaders() {
+        return {
+            'accept-language': 'en',
+            'accountid': this.accountId,
+            'appversion': '2.5.1',
+            'content-type': 'application/json',
+            'tk': this.token,
+            'tz': 'America/New_York',
+            'user-agent': 'HomeBridge-Vesync'
+        }
     }
 
     async login(username, password) {
@@ -91,13 +122,25 @@ class VesyncFan {
         this.uuid = deviceData.uuid;
         this.status = deviceData.deviceStatus;
     }
+
+    async getDetails() {
+        return post('131airPurifier/v1/device/deviceDetail', {
+            json: {
+                ...createBaseBody(),
+                ...createAuthBody(client),
+                ...createDetailsBody(),
+                // 'method': 'configurations',
+                'uuid': this.uuid
+            }
+        }).json();
+    }
 }
 
 function createHeaders(client) {
     return {
         'accept-language': 'en',
         'accountid': client.accountId,
-        'appVersion': '2.5.1',
+        'appversion': '2.5.1',
         'content-type': 'application/json',
         'tk': client.token,
         'tz': 'America/New_York',
@@ -119,6 +162,15 @@ function createAuthBody(client) {
     };
 }
 
+function createDetailsBody() {
+    return {
+        'appVersion': 'V2.9.35 build3',
+        'phoneBrand': 'HomeBridge-Vesync',
+        'phoneOS': 'HomeBridge-Vesync',
+        'traceId': Date.now()
+    };
+}
+
 // power = 'on' or 'off'
 function setFanPower(fan, power) {
     return put('131airPurifier/v1/device/deviceStatus', {
@@ -134,11 +186,13 @@ function setFanPower(fan, power) {
 
 // speed = 1, 2, 3
 function setFanSpeed(fan, speed) {
-    return put('131airPurifier/v1/device/updateSpeed', {
+    return put('cloud/v1/deviceManaged/airPurifierSpeedCtl', {
         headers: createHeaders(client),
         json: {
             ...createBaseBody(),
             ...createAuthBody(client),
+            ...createDetailsBody(),
+            'method': 'airPurifierSpeedCtl',
             'uuid': fan.uuid,
             'level': speed
         }
@@ -166,9 +220,18 @@ async function init() {
     await client.login(config.username, config.password);
     const { fans } = await client.getDevices();
     fans.forEach(async fan => {
-        await setFanPower(fan, 'on');
-        await setFanSpeed(fan, 3);
-        await setFanMode(fan, 'sleep');
+        try {
+            const controller = new FanController(fan, client);
+            controller.setPower('off');
+            // const details = await fan.getDetails();
+            // await setFanPower(fan, 'on');
+            // const result = await setFanSpeed(fan, 3).json();
+            // console.log(result);
+            // await setFanMode(fan, 'sleep');
+        } catch (e) {
+            console.log(e);
+        }
+
         // console.log(result);
     });
 }
