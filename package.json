@@ -4,6 +4,7 @@
     "description": "",
     "main": "dist/index.js",
     "scripts": {
+        "debug": "bash run-debug",
         "watch": "tsc --watch",
         "start": "node index.js",
         "test": "echo \"Error: no test specified\" && exit 1"

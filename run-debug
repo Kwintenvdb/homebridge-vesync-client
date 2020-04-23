@@ -1,0 +1,2 @@
+#!/bin/bash
+DEBUG=* C:/Users/kwint/AppData/Roaming/npm/node_modules/homebridge/bin/homebridge -D -P ../vesync-client

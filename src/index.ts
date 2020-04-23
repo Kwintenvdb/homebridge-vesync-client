@@ -5,40 +5,40 @@ import { VesyncClient } from './api/client';
 
 const client = new VesyncClient();
 
-function createHeaders(client) {
-    return {
-        'accept-language': 'en',
-        'accountid': client.accountId,
-        'appversion': '2.5.1',
-        'content-type': 'application/json',
-        'tk': client.token,
-        'tz': 'America/New_York',
-        'user-agent': 'HomeBridge-Vesync'
-    }
-}
+// function createHeaders(client) {
+//     return {
+//         'accept-language': 'en',
+//         'accountid': client.accountId,
+//         'appversion': '2.5.1',
+//         'content-type': 'application/json',
+//         'tk': client.token,
+//         'tz': 'America/New_York',
+//         'user-agent': 'HomeBridge-Vesync'
+//     }
+// }
 
-function createBaseBody() {
-    return {
-        'acceptLanguage': 'en',
-        'timeZone': 'America/Chicago'
-    };
-}
+// function createBaseBody() {
+//     return {
+//         'acceptLanguage': 'en',
+//         'timeZone': 'America/Chicago'
+//     };
+// }
 
-function createAuthBody(client) {
-    return {
-        'accountID': client.accountId,
-        'token': client.token
-    };
-}
+// function createAuthBody(client) {
+//     return {
+//         'accountID': client.accountId,
+//         'token': client.token
+//     };
+// }
 
-function createDetailsBody() {
-    return {
-        'appVersion': 'V2.9.35 build3',
-        'phoneBrand': 'HomeBridge-Vesync',
-        'phoneOS': 'HomeBridge-Vesync',
-        'traceId': Date.now()
-    };
-}
+// function createDetailsBody() {
+//     return {
+//         'appVersion': 'V2.9.35 build3',
+//         'phoneBrand': 'HomeBridge-Vesync',
+//         'phoneOS': 'HomeBridge-Vesync',
+//         'traceId': Date.now()
+//     };
+// }
 
 // power = 'on' or 'off'
 // function setFanPower(fan, power) {
@@ -104,3 +104,15 @@ async function init() {
 }
 
 init();
+
+class VesyncPlatform {
+    constructor(log: any) {
+        log('test test test');
+    }
+}
+
+export default function (homebridge: any) {
+    homebridge.registerPlatform('homebridge-vesync-client', 'VeSync', VesyncPlatform, true);
+    const Service = homebridge.hap.Service;
+    console.log(Service);
+}
