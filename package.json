@@ -1,7 +1,10 @@
 {
-    "name": "vesync-client",
+    "name": "homebridge-vesync-client",
     "version": "1.0.0",
     "description": "",
+    "keywords": [
+        "homebridge-plugin"
+    ],
     "main": "dist/index.js",
     "scripts": {
         "debug": "bash run-debug",
@@ -11,8 +14,14 @@
     },
     "author": "",
     "license": "ISC",
+    "engines": {
+        "homebridge": ">=0.4.53"
+    },
     "dependencies": {
         "crypto": "^1.0.1",
         "got": "^11.0.2"
+    },
+    "devDependencies": {
+        "homebridge": "^1.0.2"
     }
 }

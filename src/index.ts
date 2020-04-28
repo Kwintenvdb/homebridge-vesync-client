@@ -1,4 +1,6 @@
-const config = require('./config');
+// const config = require('./config');
+
+import { API, AccessoryPlugin, Logging, Service } from 'homebridge';
 
 import { FanController } from './fan/fanController';
 import { VesyncClient } from './api/client';
@@ -85,34 +87,48 @@ const client = new VesyncClient();
 //     });
 // }
 
-async function init() {
-    await client.login(config.username, config.password);
-    const { fans } = await client.getDevices();
-    fans.forEach(async fan => {
-        try {
-            const controller = new FanController(fan, client);
-            controller.setPower('off');
-            // const details = await fan.getDetails();
-            // await setFanPower(fan, 'on');
-            // const result = await setFanSpeed(fan, 3).json();
-            // console.log(result);
-            // await setFanMode(fan, 'sleep');
-        } catch (e) {
-            console.log(e);
-        }
-    });
-}
+// async function init() {
+//     await client.login(config.username, config.password);
+//     const { fans } = await client.getDevices();
+//     fans.forEach(async fan => {
+//         try {
+//             const controller = new FanController(fan, client);
+//             controller.setPower('off');
+//             // const details = await fan.getDetails();
+//             // await setFanPower(fan, 'on');
+//             // const result = await setFanSpeed(fan, 3).json();
+//             // console.log(result);
+//             // await setFanMode(fan, 'sleep');
+//         } catch (e) {
+//             console.log(e);
+//         }
+//     });
+// }
 
-init();
+// init();
 
-class VesyncPlatform {
-    constructor(log: any) {
+class VesyncPlatform implements AccessoryPlugin {
+    private readonly log: Logging;
+
+    constructor(log: Logging, config: any) {
+        this.log = log;
         log('test test test');
+        log(config);
+    }
+
+    identify() {
+        this.log('identify');
+    }
+
+    getServices(): Service[] {
+        return [];
     }
 }
 
-export default function (homebridge: any) {
-    homebridge.registerPlatform('homebridge-vesync-client', 'VeSync', VesyncPlatform, true);
+export = (homebridge: API) => {
+    console.log('test register platform');
+    homebridge.registerAccessory('homebridge-vesync-client', 'VeSync', VesyncPlatform);
+    // homebridge.registerPlatform('homebridge-vesync-client', 'VeSync', VesyncPlatform, true);
     const Service = homebridge.hap.Service;
     console.log(Service);
 }
