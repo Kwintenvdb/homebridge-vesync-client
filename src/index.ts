@@ -1,6 +1,6 @@
 // const config = require('./config');
 
-import { API, AccessoryPlugin, Logging, Service, HAP } from 'homebridge';
+import { API, AccessoryPlugin, Logging, Service, HAP, Characteristic, CharacteristicEventTypes, CharacteristicGetCallback } from 'homebridge';
 
 import { FanController } from './fan/fanController';
 import { VesyncClient } from './api/client';
@@ -111,10 +111,60 @@ class VesyncPlatform implements AccessoryPlugin {
     private readonly log: Logging;
 
     private readonly airPurifierService: Service;
+    private readonly airQualityService: Service;
+    // private readonly filterMaintenanceService: Service;
 
     constructor(log: Logging, config: any, api: API) {
         const hap = api.hap;
         this.airPurifierService = new hap.Service.AirPurifier('my purifier');
+        // this.airPurifierService.addCharacteristic(Characteristic.FilterLifeLevel);
+        this.airPurifierService.getCharacteristic(Characteristic.FilterLifeLevel)
+            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+                log.info('getting filter life level...');
+                callback(null, 50);
+            });
+
+        this.airPurifierService.getCharacteristic(Characteristic.Active)
+            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+                log.info('getting active state...');
+                callback(null, Characteristic.Active.ACTIVE);
+            })
+
+        this.airPurifierService.getCharacteristic(Characteristic.CurrentAirPurifierState)
+            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+                log.info('getting current state...');
+                callback(null, Characteristic.CurrentAirPurifierState.IDLE);
+            })
+
+        this.airPurifierService.getCharacteristic(Characteristic.RotationSpeed)
+            .setProps({ minStep: 30 })
+            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+                log.info('getting rotation speed...');
+                callback(null, 20);
+            });
+
+        this.airQualityService = new hap.Service.AirQualitySensor();
+        this.airQualityService
+            .getCharacteristic(Characteristic.AirQuality)
+            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+                log.info('getting air quality...');
+                callback(null, Characteristic.AirQuality.POOR);
+            });
+
+        // this.filterMaintenanceService = new hap.Service.FilterMaintenance();
+        // this.filterMaintenanceService
+        //     .getCharacteristic(Characteristic.FilterChangeIndication)
+        //     .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+        //         log.info('getting filter change indication...');
+        //         callback(null, Characteristic.FilterChangeIndication.CHANGE_FILTER);
+        //     });
+        // this.filterMaintenanceService
+        //     .getCharacteristic(Characteristic.FilterLifeLevel)
+        //     .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+        //         log.info('getting filter life level...');
+        //         callback(null, 0.5);
+        //     });
+
         log.info('init class xxxxxxxxxx');
     }
 
@@ -125,7 +175,11 @@ class VesyncPlatform implements AccessoryPlugin {
 
     getServices(): Service[] {
         console.log('get service');
-        return [this.airPurifierService];
+        return [
+            this.airPurifierService,
+            this.airQualityService//,
+            // this.filterMaintenanceService
+        ];
     }
 }
 
@@ -139,6 +193,5 @@ export = (homebridge: API) => {
     homebridge.registerAccessory(PLUGIN_NAME, PLATFORM_NAME, VesyncPlatform);
     // homebridge.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, VesyncPlatform);
     // homebridge.registerPlatform('homebridge-vesync-client', 'VeSync', VesyncPlatform, true);
-    const Service = homebridge.hap.Service;
     // console.log(Service);
 }
