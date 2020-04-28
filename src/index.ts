@@ -1,6 +1,6 @@
 // const config = require('./config');
 
-import { API, AccessoryPlugin, Logging, Service } from 'homebridge';
+import { API, AccessoryPlugin, Logging, Service, HAP } from 'homebridge';
 
 import { FanController } from './fan/fanController';
 import { VesyncClient } from './api/client';
@@ -110,25 +110,35 @@ const client = new VesyncClient();
 class VesyncPlatform implements AccessoryPlugin {
     private readonly log: Logging;
 
-    constructor(log: Logging, config: any) {
-        this.log = log;
-        log('test test test');
-        log(config);
+    private readonly airPurifierService: Service;
+
+    constructor(log: Logging, config: any, api: API) {
+        const hap = api.hap;
+        this.airPurifierService = new hap.Service.AirPurifier('my purifier');
+        log.info('init class xxxxxxxxxx');
     }
 
     identify() {
+        console.log('identify');
         this.log('identify');
     }
 
     getServices(): Service[] {
-        return [];
+        console.log('get service');
+        return [this.airPurifierService];
     }
 }
 
+// let hap: HAP;
+const PLUGIN_NAME = 'homebridge-vesync-client';
+const PLATFORM_NAME = 'VeSync';
+
 export = (homebridge: API) => {
-    console.log('test register platform');
-    homebridge.registerAccessory('homebridge-vesync-client', 'VeSync', VesyncPlatform);
+    // hap = homebridge.hap;
+    // console.log('test register platform');
+    homebridge.registerAccessory(PLUGIN_NAME, PLATFORM_NAME, VesyncPlatform);
+    // homebridge.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, VesyncPlatform);
     // homebridge.registerPlatform('homebridge-vesync-client', 'VeSync', VesyncPlatform, true);
     const Service = homebridge.hap.Service;
-    console.log(Service);
+    // console.log(Service);
 }
