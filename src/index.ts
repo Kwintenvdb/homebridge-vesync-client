@@ -112,6 +112,7 @@ class VesyncPlatform implements AccessoryPlugin {
 
     private readonly airPurifierService: Service;
     private readonly airQualityService: Service;
+    private readonly lightService: Service;
     // private readonly filterMaintenanceService: Service;
 
     constructor(log: Logging, config: any, api: API) {
@@ -122,6 +123,16 @@ class VesyncPlatform implements AccessoryPlugin {
             .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
                 log.info('getting filter life level...');
                 callback(null, 50);
+            });
+
+
+        this.lightService = new hap.Service.Lightbulb();
+        this.lightService.setHiddenService(true);
+
+        this.airPurifierService.getCharacteristic(Characteristic.CurrentFanState)
+            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+                log.info('getting filter life level...');
+                callback(null, Characteristic.CurrentFanState.BLOWING_AIR);
             });
 
         this.airPurifierService.getCharacteristic(Characteristic.Active)
@@ -176,6 +187,7 @@ class VesyncPlatform implements AccessoryPlugin {
     getServices(): Service[] {
         console.log('get service');
         return [
+            this.lightService,
             this.airPurifierService,
             this.airQualityService//,
             // this.filterMaintenanceService
