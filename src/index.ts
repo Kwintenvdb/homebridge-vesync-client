@@ -1,6 +1,6 @@
 // const config = require('./config');
 
-import { API, AccessoryPlugin, Logging, Service, HAP, Characteristic, CharacteristicEventTypes, CharacteristicGetCallback } from 'homebridge';
+import { API, AccessoryPlugin, Logging, Service, HAP, Characteristic, CharacteristicEventTypes, CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue } from 'homebridge';
 
 import { FanController } from './fan/fanController';
 import { VesyncClient } from './api/client';
@@ -107,7 +107,7 @@ const client = new VesyncClient();
 
 // init();
 
-class VesyncPlatform implements AccessoryPlugin {
+class VesyncAccessory implements AccessoryPlugin {
     private readonly log: Logging;
 
     private readonly airPurifierService: Service;
@@ -116,6 +116,7 @@ class VesyncPlatform implements AccessoryPlugin {
     // private readonly filterMaintenanceService: Service;
 
     constructor(log: Logging, config: any, api: API) {
+        console.log(config);
         const hap = api.hap;
         this.airPurifierService = new hap.Service.AirPurifier('my purifier');
         // this.airPurifierService.addCharacteristic(Characteristic.FilterLifeLevel);
@@ -140,6 +141,23 @@ class VesyncPlatform implements AccessoryPlugin {
                 log.info('getting active state...');
                 callback(null, Characteristic.Active.ACTIVE);
             })
+            .on(CharacteristicEventTypes.SET, async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
+                // const devices = await client.getDevices();
+                // console.log(devices);
+                log.info(value as string);
+                log.info('set active');
+
+                await client.login(config.username, config.password);
+                const devices = await client.getDevices();
+                console.log(devices);
+                const fanController = new FanController(devices[0], client);
+
+                const powerState = value === Characteristic.Active.ACTIVE ? 'on' : 'off';
+                const result = await fanController.setPower(powerState).json();
+                console.log(result);
+
+                callback(null, value);
+            })
 
         this.airPurifierService.getCharacteristic(Characteristic.CurrentAirPurifierState)
             .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
@@ -161,31 +179,12 @@ class VesyncPlatform implements AccessoryPlugin {
                 log.info('getting air quality...');
                 callback(null, Characteristic.AirQuality.POOR);
             });
-
-        // this.filterMaintenanceService = new hap.Service.FilterMaintenance();
-        // this.filterMaintenanceService
-        //     .getCharacteristic(Characteristic.FilterChangeIndication)
-        //     .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        //         log.info('getting filter change indication...');
-        //         callback(null, Characteristic.FilterChangeIndication.CHANGE_FILTER);
-        //     });
-        // this.filterMaintenanceService
-        //     .getCharacteristic(Characteristic.FilterLifeLevel)
-        //     .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        //         log.info('getting filter life level...');
-        //         callback(null, 0.5);
-        //     });
-
-        log.info('init class xxxxxxxxxx');
     }
 
     identify() {
-        console.log('identify');
-        this.log('identify');
     }
 
     getServices(): Service[] {
-        console.log('get service');
         return [
             this.lightService,
             this.airPurifierService,
@@ -202,7 +201,7 @@ const PLATFORM_NAME = 'VeSync';
 export = (homebridge: API) => {
     // hap = homebridge.hap;
     // console.log('test register platform');
-    homebridge.registerAccessory(PLUGIN_NAME, PLATFORM_NAME, VesyncPlatform);
+    homebridge.registerAccessory(PLUGIN_NAME, PLATFORM_NAME, VesyncAccessory);
     // homebridge.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, VesyncPlatform);
     // homebridge.registerPlatform('homebridge-vesync-client', 'VeSync', VesyncPlatform, true);
     // console.log(Service);

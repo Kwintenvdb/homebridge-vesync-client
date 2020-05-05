@@ -90,7 +90,7 @@ export class VesyncClient {
         console.log(this.token);
     }
 
-    async getDevices() {
+    async getDevices(): Promise<VesyncFan[]> {
         const req = this.post('cloud/v2/deviceManaged/devices', {
             headers: this.createHeaders(),
             json: {
@@ -111,6 +111,6 @@ export class VesyncClient {
         // response.result.list
         const list = response.result.list;
         const fans = list.map(it => new VesyncFan(it));
-        return { fans };
+        return fans;
     }
 }

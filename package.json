@@ -9,7 +9,7 @@
     "scripts": {
         "debug": "bash run-debug",
         "watch": "tsc --watch",
-        "start": "node index.js",
+        "start": "homebridge -D -I",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",
