@@ -1,13 +1,13 @@
 {
-    "pluginAlias": "Homebridge Vesync Client",
-    "pluginType": "accessory",
+    "pluginAlias": "VesyncPlatform",
+    "pluginType": "platform",
     "singular": true,
     "headerDisplay": "Enter your Vesync username (email) and password. This information is required to connect to Vesync's online services.",
     "schema": {
         "type": "object",
         "properties": {
             "username": {
-                "title": "Username",
+                "title": "Username or email",
                 "type": "string",
                 "required": true
             },

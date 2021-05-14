@@ -2,17 +2,14 @@
     "compilerOptions": {
         "module": "commonjs",
         "moduleResolution": "node",
-        "sourceMap": true,
-        "target": "es6",
+        "sourceMap": false,
+        "target": "ES2018",
         "resolveJsonModule": true,
-        "outDir": "dist",
-        "rootDir": "src",
+        "outDir": "./dist",
+        "rootDir": "./src",
         "skipLibCheck": true
     },
     "include": [
         "src"
-    ],
-    "exclude": [
-        "node_modules"
     ]
 }

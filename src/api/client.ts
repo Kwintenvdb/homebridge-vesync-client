@@ -64,7 +64,6 @@ export class VesyncClient {
     }
 
     async login(username, password) {
-        console.log('login');
         const pwdHashed = crypto.createHash('md5').update(password).digest('hex');
         const response: any = await this.post('cloud/v1/user/login', {
             json: {
@@ -83,7 +82,6 @@ export class VesyncClient {
             },
             responseType: 'json'
         }).json();
-        console.log(response);
 
         if (!response || !response.result) {
             throw new Error('Invalid login response from Vesync API.');
@@ -92,10 +90,9 @@ export class VesyncClient {
         const result = response.result;
         this.accountId = result.accountID;
         this.token = result.token;
-        console.log(this.token);
     }
 
-    async getDevices() {
+    async getDevices(): Promise<VesyncFan[]> {
         const req = this.post('cloud/v2/deviceManaged/devices', {
             headers: this.createHeaders(),
             json: {
@@ -113,10 +110,8 @@ export class VesyncClient {
             }
         });
         const response: any = await req.json();
-        console.log(response);
-        // response.result.list
         const list = response.result.list;
         const fans = list.map(it => new VesyncFan(it));
-        return { fans };
+        return fans;
     }
 }
