@@ -33,7 +33,6 @@ class LevoitAirPurifier {
         private readonly api: API
     ) {
         const fanController = new FanController(fan, client);
-
         const hap = api.hap;
         this.airPurifierService = this.getOrAddService(hap.Service.AirPurifier);
 
