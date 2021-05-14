@@ -1,208 +1,130 @@
-// const config = require('./config');
-
-import { API, AccessoryPlugin, Logging, Service, HAP, Characteristic, CharacteristicEventTypes, CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue } from 'homebridge';
+import {
+    API,
+    Logging,
+    Service,
+    PlatformConfig,
+    DynamicPlatformPlugin,
+    PlatformAccessory,
+    UnknownContext,
+    Categories,
+    WithUUID,
+    CharacteristicValue
+} from 'homebridge';
 
 import { FanController } from './fan/fanController';
 import { VesyncClient } from './api/client';
+import { VesyncFan } from './fan/vesyncFan';
 
 const client = new VesyncClient();
 
-// function createHeaders(client) {
-//     return {
-//         'accept-language': 'en',
-//         'accountid': client.accountId,
-//         'appversion': '2.5.1',
-//         'content-type': 'application/json',
-//         'tk': client.token,
-//         'tz': 'America/New_York',
-//         'user-agent': 'HomeBridge-Vesync'
-//     }
-// }
+interface Config extends PlatformConfig {
+    username: string;
+    password: string;
+}
 
-// function createBaseBody() {
-//     return {
-//         'acceptLanguage': 'en',
-//         'timeZone': 'America/Chicago'
-//     };
-// }
-
-// function createAuthBody(client) {
-//     return {
-//         'accountID': client.accountId,
-//         'token': client.token
-//     };
-// }
-
-// function createDetailsBody() {
-//     return {
-//         'appVersion': 'V2.9.35 build3',
-//         'phoneBrand': 'HomeBridge-Vesync',
-//         'phoneOS': 'HomeBridge-Vesync',
-//         'traceId': Date.now()
-//     };
-// }
-
-// power = 'on' or 'off'
-// function setFanPower(fan, power) {
-//     return put('131airPurifier/v1/device/deviceStatus', {
-//         headers: createHeaders(client),
-//         json: {
-//             ...createBaseBody(),
-//             ...createAuthBody(client),
-//             'uuid': fan.uuid,
-//             'status': power
-//         }
-//     });
-// }
-
-// speed = 1, 2, 3
-// function setFanSpeed(fan, speed) {
-//     return put('cloud/v1/deviceManaged/airPurifierSpeedCtl', {
-//         headers: createHeaders(client),
-//         json: {
-//             ...createBaseBody(),
-//             ...createAuthBody(client),
-//             ...createDetailsBody(),
-//             'method': 'airPurifierSpeedCtl',
-//             'uuid': fan.uuid,
-//             'level': speed
-//         }
-//     });
-// }
-
-// mode = manual, auto, sleep
-// function setFanMode(fan, mode) {
-//     const body = {
-//         ...createBaseBody(),
-//         ...createAuthBody(client),
-//         'uuid': fan.uuid,
-//         'mode': mode
-//     };
-//     if (mode === 'manual') {
-//         body['level'] = 1;
-//     }
-//     return put('131airPurifier/v1/device/updateMode', {
-//         headers: createHeaders(client),
-//         json: body
-//     });
-// }
-
-// async function init() {
-//     await client.login(config.username, config.password);
-//     const { fans } = await client.getDevices();
-//     fans.forEach(async fan => {
-//         try {
-//             const controller = new FanController(fan, client);
-//             controller.setPower('off');
-//             // const details = await fan.getDetails();
-//             // await setFanPower(fan, 'on');
-//             // const result = await setFanSpeed(fan, 3).json();
-//             // console.log(result);
-//             // await setFanMode(fan, 'sleep');
-//         } catch (e) {
-//             console.log(e);
-//         }
-//     });
-// }
-
-// init();
-
-class VesyncAccessory implements AccessoryPlugin {
-    private readonly log: Logging;
-
+class LevoitAirPurifier {
     private readonly airPurifierService: Service;
     private readonly airQualityService: Service;
-    private readonly lightService: Service;
-    // private readonly filterMaintenanceService: Service;
 
-    constructor(log: Logging, config: any, api: API) {
-        console.log(config);
+    constructor(
+        private readonly fan: VesyncFan,
+        private readonly log: Logging,
+        private readonly accessory: PlatformAccessory,
+        private readonly api: API
+    ) {
+        const fanController = new FanController(fan, client);
         const hap = api.hap;
-        this.airPurifierService = new hap.Service.AirPurifier('my purifier');
-        // this.airPurifierService.addCharacteristic(Characteristic.FilterLifeLevel);
-        this.airPurifierService.getCharacteristic(Characteristic.FilterLifeLevel)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting filter life level...');
-                callback(null, 50);
+        this.airPurifierService = this.getOrAddService(hap.Service.AirPurifier);
+
+        // this.airPurifierService.getCharacteristic(hap.Characteristic.FilterLifeLevel)
+        //     .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+        //         log.info('getting filter life level...');
+        //         callback(null, 50);
+        //     });
+
+        this.airPurifierService.getCharacteristic(hap.Characteristic.Active)
+            .onGet(() => {
+                const isOn = fanController.isOn();
+                return isOn ? hap.Characteristic.Active.ACTIVE : hap.Characteristic.Active.INACTIVE;
+            })
+            .onSet((value: CharacteristicValue) => {
+                const power = value === hap.Characteristic.Active.ACTIVE;
+                fanController.setPower(power);
+                return value;
             });
 
-
-        this.lightService = new hap.Service.Lightbulb();
-        this.lightService.setHiddenService(true);
-
-        this.airPurifierService.getCharacteristic(Characteristic.CurrentFanState)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting filter life level...');
-                callback(null, Characteristic.CurrentFanState.BLOWING_AIR);
+        this.airPurifierService.getCharacteristic(hap.Characteristic.CurrentAirPurifierState)
+            .onGet(() => {
+                return hap.Characteristic.CurrentAirPurifierState.PURIFYING_AIR;
+            });
+        
+        this.airPurifierService.getCharacteristic(hap.Characteristic.TargetAirPurifierState)
+            .onGet(() => {
+                return hap.Characteristic.TargetAirPurifierState.AUTO;
             });
 
-        this.airPurifierService.getCharacteristic(Characteristic.Active)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting active state...');
-                callback(null, Characteristic.Active.ACTIVE);
-            })
-            .on(CharacteristicEventTypes.SET, async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-                // const devices = await client.getDevices();
-                // console.log(devices);
-                log.info(value as string);
-                log.info('set active');
-
-                await client.login(config.username, config.password);
-                const devices = await client.getDevices();
-                console.log(devices);
-                const fanController = new FanController(devices[0], client);
-
-                const powerState = value === Characteristic.Active.ACTIVE ? 'on' : 'off';
-                const result = await fanController.setPower(powerState).json();
-                console.log(result);
-
-                callback(null, value);
-            })
-
-        this.airPurifierService.getCharacteristic(Characteristic.CurrentAirPurifierState)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting current state...');
-                callback(null, Characteristic.CurrentAirPurifierState.IDLE);
-            })
-
-        this.airPurifierService.getCharacteristic(Characteristic.RotationSpeed)
-            .setProps({ minStep: 30 })
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting rotation speed...');
-                callback(null, 20);
+        this.airPurifierService.getCharacteristic(hap.Characteristic.RotationSpeed)
+            .setProps({ minStep: 33, maxValue: 99 })
+            .onGet(() => {
+                const level = fanController.getFanSpeed();
+                return level * 33;
             });
 
-        this.airQualityService = new hap.Service.AirQualitySensor();
-        this.airQualityService
-            .getCharacteristic(Characteristic.AirQuality)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting air quality...');
-                callback(null, Characteristic.AirQuality.POOR);
+        this.airQualityService = this.getOrAddService(hap.Service.AirQualitySensor);
+        this.airQualityService.getCharacteristic(hap.Characteristic.AirQuality)
+            .onGet(() => {
+                return hap.Characteristic.AirQuality.POOR;
             });
     }
 
-    identify() {
-    }
-
-    getServices(): Service[] {
-        return [
-            this.lightService,
-            this.airPurifierService,
-            this.airQualityService//,
-            // this.filterMaintenanceService
-        ];
+    private getOrAddService<T extends WithUUID<typeof Service>>(service: T): Service {
+        return this.accessory.getService(service) ?? this.accessory.addService(service);
     }
 }
 
-// let hap: HAP;
+class VesyncPlatform implements DynamicPlatformPlugin {
+    private readonly cachedAccessories: PlatformAccessory[] = [];
+
+    constructor(
+        private readonly log: Logging,
+        config: Config,
+        private readonly api: API
+    ) {
+        this.api.on('didFinishLaunching', async () => {
+            await client.login(config.username, config.password);
+            await this.findDevices();
+          });
+    }
+
+    private async findDevices() {
+        const fans = await client.getDevices();
+        fans.forEach(fan => {
+            const cached = this.cachedAccessories.find(a => a.UUID === fan.uuid);
+            if (cached) {
+                this.log.debug('Restoring cached accessory: ' + cached.displayName);
+                new LevoitAirPurifier(fan, this.log, cached, this.api);
+            } else {
+                this.log.debug('Creating new fan accessory...')
+                const platformAccessory = new this.api.platformAccessory(fan.name, fan.uuid, Categories.AIR_PURIFIER);
+                new LevoitAirPurifier(fan, this.log, platformAccessory, this.api);
+                this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [platformAccessory]);
+            }
+        });
+    }
+
+    /**
+   * REQUIRED - Homebridge will call the "configureAccessory" method once for every cached
+   * accessory restored
+   */
+    configureAccessory(accessory: PlatformAccessory<UnknownContext>): void {
+        this.cachedAccessories.push(accessory);
+    }
+
+}
+
 const PLUGIN_NAME = 'homebridge-vesync-client';
-const PLATFORM_NAME = 'VeSync';
+const PLATFORM_NAME = 'VesyncPlatform';
 
 export = (homebridge: API) => {
-    // hap = homebridge.hap;
-    // console.log('test register platform');
-    homebridge.registerAccessory(PLUGIN_NAME, PLATFORM_NAME, VesyncAccessory);
-    // homebridge.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, VesyncPlatform);
-    // homebridge.registerPlatform('homebridge-vesync-client', 'VeSync', VesyncPlatform, true);
-    // console.log(Service);
-}
+    homebridge.registerPlatform(PLATFORM_NAME, VesyncPlatform);
+};

@@ -1,0 +1,23 @@
+{
+    "pluginAlias": "VesyncPlatform",
+    "pluginType": "platform",
+    "singular": true,
+    "headerDisplay": "Enter your Vesync username (email) and password. This information is required to connect to Vesync's online services.",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "username": {
+                "title": "Username or email",
+                "type": "string",
+                "required": true
+            },
+            "password": {
+                "title": "Password",
+                "type": "string",
+                "required": true
+            }
+        }
+    },
+    "form": null,
+    "display": null
+}

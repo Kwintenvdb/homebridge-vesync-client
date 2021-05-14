@@ -1,32 +1,23 @@
 import got from 'got';
 import * as crypto from 'crypto';
-import { VesyncFan } from "../fan/vesyncFan";
+import { VesyncFan } from '../fan/vesyncFan';
 
 const request = got.extend({
     prefixUrl: 'https://smartapi.vesync.com',
     responseType: 'json'
 });
 
-function createBaseBody() {
+export function createBaseBody() {
     return {
         'acceptLanguage': 'en',
         'timeZone': 'America/Chicago'
     };
 }
 
-function createAuthBody(client) {
+export function createAuthBody(client) {
     return {
         'accountID': client.accountId,
         'token': client.token
-    };
-}
-
-function createDetailsBody() {
-    return {
-        'appVersion': 'V2.9.35 build3',
-        'phoneBrand': 'HomeBridge-Vesync',
-        'phoneOS': 'HomeBridge-Vesync',
-        'traceId': Date.now()
     };
 }
 
@@ -64,15 +55,14 @@ export class VesyncClient {
     }
 
     async login(username, password) {
-        console.log('login');
         const pwdHashed = crypto.createHash('md5').update(password).digest('hex');
-        const response: any = await this.post('vold/user/login', {
+        const response: any = await this.post('cloud/v1/user/login', {
             json: {
                 'acceptLanguage': 'en',
                 'appVersion': '2.5.1',
                 'phoneBrand': 'SM N9005',
                 'phoneOS': 'Android',
-                'account': username,
+                'email': username,
                 'password': pwdHashed,
                 'devToken': '',
                 'userType': 1,
@@ -84,10 +74,13 @@ export class VesyncClient {
             responseType: 'json'
         }).json();
 
-        this.accountId = response.accountID;
-        this.token = response.tk;
-        console.log(response);
-        console.log(this.token);
+        if (!response || !response.result) {
+            throw new Error('Invalid login response from Vesync API.');
+        }
+
+        const result = response.result;
+        this.accountId = result.accountID;
+        this.token = result.token;
     }
 
     async getDevices(): Promise<VesyncFan[]> {
@@ -108,7 +101,6 @@ export class VesyncClient {
             }
         });
         const response: any = await req.json();
-        // response.result.list
         const list = response.result.list;
         const fans = list.map(it => new VesyncFan(it));
         return fans;
