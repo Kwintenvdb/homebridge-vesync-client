@@ -34,3 +34,4 @@ On the roadmap:
 * Changing fan speed
 * Displaying filter life level
 * Toggling night and auto mode
+* Extract TypeScript Vesync API client into separate library (port of [pyvesync](https://github.com/webdjoe/pyvesync))
