@@ -1,9 +1,11 @@
 {
     "name": "homebridge-vesync-client",
-    "version": "0.0.1",
-    "description": "",
+    "version": "0.0.2",
+    "description": "A Homebridge plugin to control Levoit Air Purifiers with via the Vesync Platform.",
     "keywords": [
-        "homebridge-plugin"
+        "homebridge-plugin",
+        "levoit",
+        "vesync"
     ],
     "main": "dist/index.js",
     "scripts": {
@@ -12,7 +14,7 @@
         "watch": "tsc --watch",
         "start": "node index.js"
     },
-    "author": "",
+    "author": "Kwinten Van den Berghe",
     "license": "ISC",
     "engines": {
         "homebridge": ">=0.4.53"
