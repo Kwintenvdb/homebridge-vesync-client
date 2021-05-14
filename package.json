@@ -1,18 +1,21 @@
 {
     "name": "homebridge-vesync-client",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "A Homebridge plugin to control Levoit Air Purifiers with via the Vesync Platform.",
     "keywords": [
         "homebridge-plugin",
         "levoit",
         "vesync"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/npm/cli.git"
+    },
+    "homepage": "https://github.com/Kwintenvdb/homebridge-vesync-client",
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc",
-        "debug": "bash run-debug",
-        "watch": "tsc --watch",
-        "start": "node index.js"
+        "watch": "tsc --watch"
     },
     "author": "Kwinten Van den Berghe",
     "license": "ISC",
