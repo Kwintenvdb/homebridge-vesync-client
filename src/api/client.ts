@@ -66,13 +66,13 @@ export class VesyncClient {
     async login(username, password) {
         console.log('login');
         const pwdHashed = crypto.createHash('md5').update(password).digest('hex');
-        const response: any = await this.post('vold/user/login', {
+        const response: any = await this.post('cloud/v1/user/login', {
             json: {
                 'acceptLanguage': 'en',
                 'appVersion': '2.5.1',
                 'phoneBrand': 'SM N9005',
                 'phoneOS': 'Android',
-                'account': username,
+                'email': username,
                 'password': pwdHashed,
                 'devToken': '',
                 'userType': 1,
@@ -83,10 +83,15 @@ export class VesyncClient {
             },
             responseType: 'json'
         }).json();
-
-        this.accountId = response.accountID;
-        this.token = response.tk;
         console.log(response);
+
+        if (!response || !response.result) {
+            throw new Error('Invalid login response from Vesync API.');
+        }
+
+        const result = response.result;
+        this.accountId = result.accountID;
+        this.token = result.token;
         console.log(this.token);
     }
 
@@ -108,6 +113,7 @@ export class VesyncClient {
             }
         });
         const response: any = await req.json();
+        console.log(response);
         // response.result.list
         const list = response.result.list;
         const fans = list.map(it => new VesyncFan(it));
