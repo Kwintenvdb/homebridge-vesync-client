@@ -1,32 +1,23 @@
 import got from 'got';
 import * as crypto from 'crypto';
-import { VesyncFan } from "../fan/vesyncFan";
+import { VesyncFan } from '../fan/vesyncFan';
 
 const request = got.extend({
     prefixUrl: 'https://smartapi.vesync.com',
     responseType: 'json'
 });
 
-function createBaseBody() {
+export function createBaseBody() {
     return {
         'acceptLanguage': 'en',
         'timeZone': 'America/Chicago'
     };
 }
 
-function createAuthBody(client) {
+export function createAuthBody(client) {
     return {
         'accountID': client.accountId,
         'token': client.token
-    };
-}
-
-function createDetailsBody() {
-    return {
-        'appVersion': 'V2.9.35 build3',
-        'phoneBrand': 'HomeBridge-Vesync',
-        'phoneOS': 'HomeBridge-Vesync',
-        'traceId': Date.now()
     };
 }
 

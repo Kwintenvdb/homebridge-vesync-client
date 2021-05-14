@@ -20,3 +20,17 @@ npm install -g homebridge-vesync-client
 * Save and restart Homebridge.
 
 This plugin requires your Vesync credentials as it communicates with the Vesync devices via Vesync's own API. Your credentials are only stored in the Homebridge config and not sent to any server except Vesync's.
+
+## Features
+
+This plugin currently supports the following features.
+
+### Levoit Air Purifier
+
+* Turning the Air Purifier on and off
+
+On the roadmap:
+
+* Changing fan speed
+* Displaying filter life level
+* Toggling night and auto mode

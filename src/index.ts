@@ -2,8 +2,6 @@ import {
     API,
     Logging,
     Service,
-    CharacteristicEventTypes,
-    CharacteristicGetCallback,
     PlatformConfig,
     DynamicPlatformPlugin,
     PlatformAccessory,
@@ -27,7 +25,6 @@ interface Config extends PlatformConfig {
 class LevoitAirPurifier {
     private readonly airPurifierService: Service;
     private readonly airQualityService: Service;
-    // private readonly filterMaintenanceService: Service;
 
     constructor(
         private readonly fan: VesyncFan,
@@ -40,11 +37,11 @@ class LevoitAirPurifier {
         const hap = api.hap;
         this.airPurifierService = this.getOrAddService(hap.Service.AirPurifier);
 
-        this.airPurifierService.getCharacteristic(hap.Characteristic.FilterLifeLevel)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting filter life level...');
-                callback(null, 50);
-            });
+        // this.airPurifierService.getCharacteristic(hap.Characteristic.FilterLifeLevel)
+        //     .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+        //         log.info('getting filter life level...');
+        //         callback(null, 50);
+        //     });
 
         this.airPurifierService.getCharacteristic(hap.Characteristic.Active)
             .onGet(() => {
@@ -56,25 +53,28 @@ class LevoitAirPurifier {
                 fanController.setPower(power);
                 return value;
             });
-        // this.airPurifierService.getCharacteristic(hap.Characteristic.CurrentAirPurifierState)
-        //     .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        //         log.info('getting current state...');
-        //         // @ts-ignore
-        //         callback(null, Characteristic.CurrentAirPurifierState.IDLE);
-        //     });
 
-        this.airPurifierService.getCharacteristic(hap.Characteristic.RotationSpeed)
-            .setProps({ minStep: 30 })
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting rotation speed...');
-                callback(null, 20);
+        this.airPurifierService.getCharacteristic(hap.Characteristic.CurrentAirPurifierState)
+            .onGet(() => {
+                return hap.Characteristic.CurrentAirPurifierState.PURIFYING_AIR;
+            });
+        
+        this.airPurifierService.getCharacteristic(hap.Characteristic.TargetAirPurifierState)
+            .onGet(() => {
+                return hap.Characteristic.TargetAirPurifierState.AUTO;
             });
 
-        this.airQualityService = new hap.Service.AirQualitySensor();
+        this.airPurifierService.getCharacteristic(hap.Characteristic.RotationSpeed)
+            .setProps({ minStep: 33, maxValue: 99 })
+            .onGet(() => {
+                const level = fanController.getFanSpeed();
+                return level * 33;
+            });
+
+        this.airQualityService = this.getOrAddService(hap.Service.AirQualitySensor);
         this.airQualityService.getCharacteristic(hap.Characteristic.AirQuality)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('getting air quality...');
-                callback(null, hap.Characteristic.AirQuality.POOR);
+            .onGet(() => {
+                return hap.Characteristic.AirQuality.POOR;
             });
     }
 
