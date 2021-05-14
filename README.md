@@ -7,7 +7,7 @@ A [Homebridge](https://github.com/homebridge/homebridge) plugin to control Levoi
 
 See the [Homebridge](https://github.com/homebridge/homebridge) documentation for how to install and run Homebridge.
 
-To install the plugin:
+To install the plugin, run the following on the command line on the machine where Homebridge is installed:
 
 ```
 npm install -g homebridge-vesync-client
@@ -17,5 +17,6 @@ npm install -g homebridge-vesync-client
 
 * Via the Homebridge UI, enter the **Homebridge Vesync Client** plugin settings.
 * Enter your [Vesync app](https://www.vesync.com/app) credentials.
+* Save and restart Homebridge.
 
 This plugin requires your Vesync credentials as it communicates with the Vesync devices via Vesync's own API. Your credentials are only stored in the Homebridge config and not sent to any server except Vesync's.
