@@ -1,4 +1,7 @@
 # homebridge-vesync-client
+
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Kwintenvdb/homebridge-vesync-client/Build)
+
 A [Homebridge](https://github.com/homebridge/homebridge) plugin to control Levoit Air Purifiers with via the Vesync Platform.
 
 **NOTE: This plugin is still heavily work in progress. Therefore it has limited functionality and may introduce breaking changes at any time.**
