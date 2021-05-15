@@ -38,3 +38,19 @@ On the roadmap:
 * Displaying filter life level
 * Toggling night and auto mode
 * Extract TypeScript Vesync API client into separate library (port of [pyvesync](https://github.com/webdjoe/pyvesync))
+
+## Local Development
+
+If you want to develop and run the plugin locally, you can do the following:
+
+1. Clone the repository.
+1. Run the following scripts on the command line:
+
+```
+cd homebridge-vesync-client
+npm install
+npm run watch
+npm link
+```
+
+Afterwards, restart Homebridge. Restart Homebridge whenever you have made changes to the code.
