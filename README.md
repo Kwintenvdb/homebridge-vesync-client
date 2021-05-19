@@ -24,6 +24,18 @@ npm install -g homebridge-vesync-client
 
 This plugin requires your Vesync credentials as it communicates with the Vesync devices via Vesync's own API. Your credentials are only stored in the Homebridge config and not sent to any server except Vesync's.
 
+You can also do this directly via the homebridge config by adding your credentials to the config file under `platforms`. Replace the values of `username` and `password` by your credentials.
+
+```json
+"platforms": [
+    {
+        "platform": "VesyncPlatform",
+        "username": "email@example.com",
+        "password": "enter_your_password"
+    }
+]
+```
+
 ## Features
 
 This plugin currently supports the following features.
